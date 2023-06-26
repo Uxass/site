@@ -1,0 +1,39 @@
+body {
+    background: #BF8230;
+}
+aside {
+    float: left;
+    background: #FFAD40;
+    width: 20%;
+    padding: 2.5%;
+    height: 100vh;
+    color: #fff;
+    border-right: 5px solid #FFC373;
+
+}
+aside img {
+    float: left;
+}
+aside .logo {
+    font-size: 40px;
+    margin-left: 10px;
+    font-weight: bold;
+}
+aside h3 {
+    margin-top: 50px;
+    font-size: 25px;
+}
+aside ul {list-style: none}
+aside ul li {
+    color: #fff;
+    display: block;
+    margin-top: 20px;
+    transition: all .6s ease;
+
+}
+
+aside ul li:hover, aside ul a:hover{
+    color: #FF7640
+    text-decoration: none;
+    transform: scale(1.05);
+}
