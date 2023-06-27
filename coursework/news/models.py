@@ -8,5 +8,7 @@ class Articles(models.Model):
     date = models.DateTimeField('Дата публикации')
 
     def __str__(self):
-        return self.title
-
+        return self.title #После self. вывод нужные данные с помощью метода str, который позволяет указать как именно будет вызываться каждый отдельный объект"""
+    class Meta:
+        verbose_name = 'Новость'
+        verbose_name_plural = 'Новости'
