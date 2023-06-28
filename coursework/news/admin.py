@@ -10,13 +10,27 @@ admin.site.register(Tag)
 admin.site.register(School)
 admin.site.register(Hull)
 
+@admin.register(Author)
+class AuthorAdmin(admin.ModelAdmin):
+    list_display = ('last_name', 'first_name')
+
 @admin.register(Articles)
 
 class ArticlesAdmin(admin.ModelAdmin):
     list_display = ('title', 'school_name', 'date')
     list_filter = ('school_name', 'Hull', 'date')
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'genre', 'school_name', 'Hull')
+        }),
+        ('Корпус и дата', {
+            'fields': ('author', 'date')
+        }),
+    )
 
 
-@admin.register(Author)
-class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name')
+
+
+
+
+
