@@ -17,11 +17,10 @@ class AuthorAdmin(admin.ModelAdmin):
 @admin.register(Articles)
 
 class ArticlesAdmin(admin.ModelAdmin):
-    list_display = ('title', 'school_name', 'date')
     list_filter = ('school_name', 'Hull', 'date')
     fieldsets = (
         (None, {
-            'fields': ('title', 'genre', 'school_name', 'Hull')
+            'fields': ('title', 'anons', 'full_text',  'genre', 'school_name', 'Hull')
         }),
         ('Корпус и дата', {
             'fields': ('author', 'date')

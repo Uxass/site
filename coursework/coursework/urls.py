@@ -19,11 +19,40 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+from django.urls import path, include
+from rest_framework import routers, serializers, viewsets
+from news.models import Author, Articles, Genre, Tag, School, Hull
+
+# Serializers define the API representation.
+class AuthorSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Author
+        fields = ['first_name', 'last_name']
+
+# ViewSets define the view behavior.
+class AuthorViewSet(viewsets.ModelViewSet):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+# Routers provide an easy way of automatically determining the URL conf.
+class GenreSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ['name']
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+router = routers.DefaultRouter()
+router.register(r'Genre', GenreViewSet)
+router.register(r'Author', AuthorViewSet)
+
 urlpatterns = [
+    path('api', include(router.urls)),
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
     path('news/', include('news.urls')),
-
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
+    ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
