@@ -74,3 +74,5 @@ class Hull(models.Model):
     class Meta:
         verbose_name = 'Корпус'
         verbose_name_plural = 'Корпуса'
+
+
