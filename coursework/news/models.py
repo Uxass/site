@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from simple_history.models import HistoricalRecords
 # Create your models here.
 class Articles(models.Model):
     title = models.CharField('Название', max_length=50)
@@ -10,6 +11,8 @@ class Articles(models.Model):
     author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
     school_name = models.ForeignKey('School', on_delete=models.SET_NULL, null=True)
     Hull = models.ForeignKey('Hull', on_delete=models.SET_NULL, null=True)
+    history = HistoricalRecords()
+
     def get_absolute_url(self):
          return reverse('news-detail', args=[(self.id)])
 
@@ -19,6 +22,7 @@ class Articles(models.Model):
     class Meta:
         verbose_name = 'Новость'
         verbose_name_plural = 'Новости'
+    
 
 class Genre(models.Model):
 
