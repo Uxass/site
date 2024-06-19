@@ -20,6 +20,10 @@
             <a href="{% url 'news_home' %}"><li><i class="fas fa-address-card"></i> Новости</li></a>
             <a href=""><li><i class="fas fa-paper-plane"></i> Контакты</li></a>
             <a href="{% url 'create' %}"><li><button class="btn btn-info"></i> Добавить запись</li></button></a>
+            <a href="/login/vk-oauth2"><img src="/static/lvk.png" class="avatar-3" data-toggle="tooltip" title="Login via VKontakte"></a>
+            <li class="google">
+                <a href="{% url 'social:begin' 'google' %}">Login with Google</a>
+            </li>
         </ul>
     </aside>
     <main>

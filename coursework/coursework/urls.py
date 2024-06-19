@@ -36,6 +36,14 @@ class AuthorSerializer(serializers.HyperlinkedModelSerializer):
         model = Author
         fields = ['first_name', 'last_name']
 
+
+#Swagger
+from rest_framework import permissions
+from django.urls import path, include
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+#Swagger
+
 # ViewSets define the view behavior.
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
@@ -46,11 +54,15 @@ class GenreSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Genre
         fields = ['name']
-
+    def validate(self, data):
+        if len(data['name']) < 5:
+            raise serializers.ValidationError("Название жанра должно содержать как минимум 5 символов.")
+        return data    
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    
 
 
 
@@ -58,27 +70,38 @@ class ArticlesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Articles
         fields = ['title', 'date', 'anons', 'genre']
-    def validate_title(self, value):
-        # Проверка что длинна статьи больше 5 символов
-        if len(value) < 5:
-            raise serializers.ValidationError("Название статьи должно содержать как минимум 5 символов.")
-        return value        
         
-class ArticlesFViewSet(ModelViewSet):
+
+from rest_framework import viewsets
+from rest_framework import filters
+from django_filters import rest_framework as django_filters
+
+class ArticlesFViewSet(viewsets.ModelViewSet):
     queryset = Articles.objects.all()
     serializer_class = ArticlesSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['genre__name']
+    search_fields = ['title', 'anons', 'full_text']
+    ordering_fields = ['published_date', 'author']  # пример возмож полей для сортировки
 
-    @action(methods=['GET'], detail=False)
+    def get_queryset(self):
+        queryset = self.queryset
+        genre = self.request.query_params.get('genre')
+        if genre:
+            queryset = queryset.filter(genre__name=genre)
+        return queryset
+
+    @action(detail=False, methods=['get'])
     def latest_news(self, request):
         # Возвращает последние 5 новостей
-        latest_news = self.queryset.order_by('-date')[:5]
+        latest_news = self.queryset.order_by('-published_date')[:5]
         serializer = self.get_serializer(latest_news, many=True)
         return Response(serializer.data)
 
-    @action(methods=['POST'], detail=True)
-    def filter_articles(self, request, pk=None):
+    @action(detail=False, methods=['post'])
+    def filter_articles(self, request):
         genre_filter = request.data.get('genres', [])
-        
+
         # Perform filtering using AND, OR, and NOT operations
         query = Q()
         for genre in genre_filter:
@@ -90,68 +113,36 @@ class ArticlesFViewSet(ModelViewSet):
         filtered_articles = self.queryset.filter(query)
         serializer = self.get_serializer(filtered_articles, many=True)
         return Response(serializer.data)
-#У меня естьfilter_articlesдействие, которое принимает список жанров в POSTтеле запроса. Затем он создает набор запросов, используя операции AND, OR и NOT.
-#Объект Qиспользуется для построения запроса на основе входных жанров, реализуя
-#The ~используется для обозначения операции НЕ, и код строит запрос соответствующим образом.
-#Когда filter_articlesдействие вызывается с POSTзапросом, оно обрабатывает жанровые фильтры и возвращает
-# latest_news: HTTP метод GET, которое возвращает последние 5 новостей из queryset, отсортированных по дате.
-#filter_articles: HTTP метод POST, которое выполняет фильтрацию статей на основе переданных в запросе жанров. Фильтрация выполняется с использованием операций AND, OR и NOT.
-#Для действия filter_articles извлекаются жанры из данных запроса, затем формируется объект запроса query, который используется для фильтрации объектов queryset на основе переданных жанров. Результат фильтрации сериализуется и возвращается в ответе.
-
-#Фильтрация по аргументам именованного URL
-class ArticlesFViewSet(ModelViewSet):
-    queryset = Articles.objects.all()
-    serializer_class = ArticlesSerializer
-
-    def get_queryset(self):
-        genre = self.kwargs.get('genre')  #  Если предположить, что шаблон URL включает жанр в качестве именованного аргумента
-        if genre:
-            return self.queryset.filter(genre__name=genre)
-        return self.queryset
-
-
-# Фильтрация по параметрам GET в URL-адресе
-class ArticlesFViewSet(ModelViewSet):
-    queryset = Articles.objects.all()
-    serializer_class = ArticlesSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['genre__name']
-
-
-#Фильтрация по поискуSearchFilterпредоставленный Django Rest Framework
-class ArticlesFViewSet(ModelViewSet):
-    queryset = Articles.objects.all()
-    serializer_class = ArticlesSerializer
-    filter_backends = [SearchFilter]
-    search_fields = ['title', 'anons', 'full_text']  # Поля для поиска
-
-    def get_queryset(self):
-        queryset = self.queryset
-        query = self.request.query_params.get('q')
-        if query:
-            queryset = queryset.filter(
-                Q(title__icontains=query) |
-                Q(anons__icontains=query) |
-                Q(full_text__icontains=query)
-            )
-        return queryset
-
 router = routers.DefaultRouter()
 router.register(r'Genre', GenreViewSet)
 router.register(r'Author', AuthorViewSet)
 router.register(r'Articles', ArticlesFViewSet)
-router.register(r'ArticlesF', ArticlesFViewSet)
 
-
-
+#swagger
+schema_view = get_schema_view(
+ openapi.Info(
+ title="Snippets API",
+ default_version='v1',
+ description="Test description",
+ terms_of_service="https://www.google.com/policies/terms/",
+ contact=openapi.Contact(email="contact@snippets.local"),
+ license=openapi.License(name="BSD License"),
+ ),
+ public=True,
+ permission_classes=(permissions.AllowAny,),
+)
+#swagger
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
+    path('', include('social_django.urls')),
+    path('token/', obtain_auth_token), 
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0),
+name='schema-swagger-ui'),
     path('api', include(router.urls)),
     path('admin/', admin.site.urls),
     path('', include('main.urls')),
     path('news/', include('news.urls')),
     path('articles/genre/<str:genre>/', ArticlesFViewSet.as_view({'get': 'list'}), name='articles-by-genre'),
     path('articles/', ArticlesFViewSet.as_view({'get': 'list'}), name='articles-list'),
-    path('articles/', ArticlesFViewSet.as_view({'get': 'list'}), name='articles-list'),    
     ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-

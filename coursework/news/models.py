@@ -80,3 +80,7 @@ class Hull(models.Model):
         verbose_name_plural = 'Корпуса'
 
 
+
+class Visit(models.Model):
+    path = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
